@@ -1,0 +1,46 @@
+[project]
+name = "projects"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp>=3.13.2",
+    "alive-progress>=3.3.0",
+    "beautifulsoup4>=4.14.3",
+    "chime>=0.7.0",
+    "clipboard>=0.0.4",
+    "deepl>=1.25.0",
+    "djangorestframework>=3.16.1",
+    "dotenv>=0.9.9",
+    "fastapi>=0.115.0",
+    "gradio>=5.23.1",
+    "ipython>=9.8.0",
+    "keyboard>=0.13.5",
+    "lxml>=6.0.2",
+    "openai>=2.8.1",
+    "openai-agents>=0.6.2",
+    "opencv-python>=4.11.0.86",
+    "pandas>=2.3.3",
+    "playwright>=1.56.0",
+    "playwright-stealth>=2.0.0",
+    "psycopg2-binary>=2.9.9",
+    "pyautogui>=0.9.54",
+    "pydantic>=2.11.0,<=2.12.4",
+    "pymupdf>=1.26.7",
+    "pypdf2>=3.0.1",
+    "pyperclip>=1.11.0",
+    "pyside6>=6.10.1",
+    "python-telegram-bot>=22.5",
+    "pyttsx3>=2.99",
+    "pyyaml>=6.0.3",
+    "reportlab>=4.4.6",
+    "requests>=2.32.5",
+    "selenium>=4.38.0",
+    "sqlalchemy>=2.0.0",
+    "textblob>=0.19.0",
+    "titlecase>=2.4.1",
+    "uvicorn>=0.32.0",
+    "wget>=3.2",
+    "win10toast>=0.9",
+]

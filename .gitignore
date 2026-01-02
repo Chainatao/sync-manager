@@ -1,0 +1,144 @@
+# ================================
+# 🌟 GLOBAL
+# ================================
+
+# Common
+.DS_Store
+Thumbs.db
+
+# ================================
+# 🐍 PYTHON CORE
+# ================================
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# ================================
+# 📦 VIRTUAL ENVIRONMENTS
+# ================================
+venv/
+env/
+.venv/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# ================================
+# 🧪 TESTING & COVERAGE
+# ================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pyre/
+
+# ================================
+# 🧰 BUILD & DISTRIBUTION
+# ================================
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ================================
+# 🧑‍💻 IDE & EDITOR SETTINGS
+# ================================
+.vscode/
+.idea/
+.spyderproject
+.spyproject
+.ropeproject
+*.sublime-project
+*.sublime-workspace
+
+# ================================
+# 🔧 ENVIRONMENT & CONFIG FILES
+# ================================
+*.env
+.env
+*.secrets
+.secrets
+*.ini
+*.cfg
+*.log
+*.bak
+*.swp
+*.tmp
+*.DS_Store
+~$*
+agekey.txt
+
+# ================================
+# 🚀 DEPLOYMENT & CONTAINERS
+# ================================
+*.pid
+*.seed
+*.manifest
+*.spec
+*.sqlite3
+celerybeat-schedule
+instance/
+web_static/
+staticfiles/
+media/
+*.db
+db.sqlite3
+
+# ================================
+# 🐳 DOCKER
+# ================================
+docker-compose.override.yml
+.docker/
+*.pid
+
+# ================================
+# 🧠 JUPYTER NOTEBOOKS
+# ================================
+.ipynb_checkpoints
+*.ipynb_save
+
+# ================================
+# 🧩 MISC
+# ================================
+profile_default/
+ipython_config.py
+.mypy_cache/
+.dmypy.json
+.pytype/
+cython_debug/
+
+# Large model or data files
+*.h5
+*.pkl
+*.ckpt
+*.pt
+*.onnx
+*.tflite
+*.bin
+*.weights
+*.npy
+*.npz
+# Ignore Python cache folders
+__pycache__/
+**/__pycache__/
+".env" 
