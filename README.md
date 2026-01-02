@@ -298,9 +298,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-**Project Maintainer**: Your Name
+**Project Maintainer**: Chainatao
 
-- GitHub: [@yourusername](https://github.com/Chainatao)
+- GitHub: [@Chainatao](https://github.com/Chainatao)
 - Email: inform@acion.es
 
 ---
