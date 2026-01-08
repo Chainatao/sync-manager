@@ -338,7 +338,7 @@ class Developer(Base):
     logo_url = Column(String(512), nullable=True)
     contact_email = Column(String(255), nullable=True)
     contact_phone = Column(String(50), nullable=True)
-    metadata = Column(JSON, nullable=True)
+    meta_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
@@ -367,7 +367,7 @@ class Development(Base):
     completion_date = Column(DateTime, nullable=True)
     images = Column(JSON, nullable=True)
     website = Column(String(512), nullable=True)
-    metadata = Column(JSON, nullable=True)
+    meta_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
@@ -632,6 +632,7 @@ class SyncService:
 ''',
     "api.py": '''from fastapi import FastAPI, Depends, HTTPException, Header
 from typing import List, Dict, Any, Optional
+from datetime import datetime
 from pydantic import BaseModel
 from .models import Tenant, Source, Target, SourceProperty, TargetProperty, Developer, Development
 from .database import get_db, init_db
@@ -902,7 +903,7 @@ async def create_developer(developer: DeveloperCreate, tenant: Tenant = Depends(
             logo_url=developer.logo_url,
             contact_email=developer.contact_email,
             contact_phone=developer.contact_phone,
-            metadata=developer.metadata
+            meta_data=developer.metadata
         )
         db.add(new_developer)
         db.flush()
@@ -946,7 +947,7 @@ async def get_developer(developer_id: int, tenant: Tenant = Depends(verify_api_k
             "logo_url": developer.logo_url,
             "contact_email": developer.contact_email,
             "contact_phone": developer.contact_phone,
-            "metadata": developer.metadata
+            "metadata": developer.meta_data
         }
 
 
@@ -1043,7 +1044,7 @@ async def create_development(development: DevelopmentCreate, tenant: Tenant = De
             completion_date=development.completion_date,
             images=development.images,
             website=development.website,
-            metadata=development.metadata
+            meta_data=development.metadata
         )
         db.add(new_development)
         db.flush()
@@ -1106,7 +1107,7 @@ async def get_development(development_id: int, tenant: Tenant = Depends(verify_a
             "completion_date": development.completion_date.isoformat() if development.completion_date else None,
             "images": development.images,
             "website": development.website,
-            "metadata": development.metadata
+            "metadata": development.meta_data
         }
 
 

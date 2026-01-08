@@ -182,13 +182,21 @@ python -m sync_manager.cli run
 
 Comprehensive guides are available in the `/guides` folder:
 
-- **[01-QUICK_START.md](guides/01-QUICK_START.md)** - Get up and running in minutes
-- **[02-DATABASE_SETUP.md](guides/02-DATABASE_SETUP.md)** - Database installation and configuration
-- **[03-API_REFERENCE.md](guides/03-API_REFERENCE.md)** - Complete API endpoint documentation
-- **[04-PROPERTY_SCHEMA.md](guides/04-PROPERTY_SCHEMA.md)** - Standardized property schema details
-- **[05-SYNC_WORKFLOW.md](guides/05-SYNC_WORKFLOW.md)** - Understanding the sync process
-- **[06-ADAPTERS.md](guides/06-ADAPTERS.md)** - Creating custom source/target adapters
-- **[07-MIGRATION_GUIDE.md](guides/07-MIGRATION_GUIDE.md)** - Migrating from existing systems
+### Setup Guides
+- **[START_HERE.txt](guides/setup/START_HERE.txt)** - Begin here for project setup
+- **[CHOOSE_YOUR_OPTION.txt](guides/setup/CHOOSE_YOUR_OPTION.txt)** - Choose integrated or independent setup
+- **[INDEPENDENT_PROJECT_GUIDE.txt](guides/setup/INDEPENDENT_PROJECT_GUIDE.txt)** - Create standalone project
+- **[SETUP_COMPLETE.md](guides/setup/SETUP_COMPLETE.md)** - Post-installation guide
+
+### Usage Guides
+- **[QUICKSTART.md](guides/usage/QUICKSTART.md)** - Get up and running quickly
+- **[HOW_SYNC_WORKS.md](guides/usage/HOW_SYNC_WORKS.md)** - Understanding the sync process
+- **[SYNC_MANAGER_USAGE_GUIDE.md](guides/usage/SYNC_MANAGER_USAGE_GUIDE.md)** - Complete usage guide
+
+### Reference Documentation
+- **[PROPERTY_DATA_STRUCTURE.md](guides/reference/PROPERTY_DATA_STRUCTURE.md)** - Standardized property schema
+- **[IMPLEMENTATION.md](guides/reference/IMPLEMENTATION.md)** - Technical implementation details
+- **[DEVELOPERS_DEVELOPMENTS.md](guides/DEVELOPERS_DEVELOPMENTS.md)** - Developer & development models
 
 ---
 
@@ -274,7 +282,16 @@ class MyCustomSourceAdapter(BaseSourceAdapter):
         return StandardProperty(**transformed_data)
 ```
 
-See [06-ADAPTERS.md](guides/06-ADAPTERS.md) for detailed guide.
+See [IMPLEMENTATION.md](guides/reference/IMPLEMENTATION.md) for detailed guide.
+
+---
+
+## 📋 Recent Updates
+
+- **v1.0.1** (January 2026)
+  - Fixed SQLAlchemy reserved attribute conflict: renamed `metadata` columns to `meta_data`
+  - Added missing `datetime` import in API module
+  - Updated templates and generators with bug fixes
 
 ---
 
