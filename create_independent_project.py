@@ -667,13 +667,13 @@ class PropertyPatch(BaseModel):
     data: Dict[str, Any]
 
 
-def verify_api_key(x_api_key: str = Header(...)):
-    """Verify API key and return tenant"""
+def verify_api_key(x_api_key: str = Header(...)) -> int:
+    """Verify API key and return tenant ID"""
     with get_db() as db:
         tenant = db.query(Tenant).filter(Tenant.api_key == x_api_key).first()
         if not tenant:
             raise HTTPException(status_code=401, detail="Invalid API key")
-        return tenant
+        return tenant.id
 
 
 @app.on_event("startup")
@@ -704,11 +704,11 @@ async def create_tenant(tenant: TenantCreate):
 
 
 @app.post("/sources")
-async def create_source(source: SourceCreate, tenant: Tenant = Depends(verify_api_key)):
+async def create_source(source: SourceCreate, tenant_id: int = Depends(verify_api_key)):
     """Create a new source"""
     with get_db() as db:
         new_source = Source(
-            tenant_id=tenant.id,
+            tenant_id=tenant_id,
             name=source.name,
             type=source.type,
             config=source.config
@@ -720,11 +720,11 @@ async def create_source(source: SourceCreate, tenant: Tenant = Depends(verify_ap
 
 
 @app.post("/targets")
-async def create_target(target: TargetCreate, tenant: Tenant = Depends(verify_api_key)):
+async def create_target(target: TargetCreate, tenant_id: int = Depends(verify_api_key)):
     """Create a new target"""
     with get_db() as db:
         new_target = Target(
-            tenant_id=tenant.id,
+            tenant_id=tenant_id,
             name=target.name,
             type=target.type,
             config=target.config
@@ -736,18 +736,18 @@ async def create_target(target: TargetCreate, tenant: Tenant = Depends(verify_ap
 
 
 @app.get("/sources")
-async def list_sources(tenant: Tenant = Depends(verify_api_key)):
+async def list_sources(tenant_id: int = Depends(verify_api_key)):
     """List all sources for tenant"""
     with get_db() as db:
-        sources = db.query(Source).filter(Source.tenant_id == tenant.id).all()
+        sources = db.query(Source).filter(Source.tenant_id == tenant_id).all()
         return [{"id": s.id, "name": s.name, "type": s.type, "is_active": s.is_active} for s in sources]
 
 
 @app.get("/targets")
-async def list_targets(tenant: Tenant = Depends(verify_api_key)):
+async def list_targets(tenant_id: int = Depends(verify_api_key)):
     """List all targets for tenant"""
     with get_db() as db:
-        targets = db.query(Target).filter(Target.tenant_id == tenant.id).all()
+        targets = db.query(Target).filter(Target.tenant_id == tenant_id).all()
         return [{"id": t.id, "name": t.name, "type": t.type, "is_active": t.is_active} for t in targets]
 
 
@@ -755,10 +755,10 @@ async def list_targets(tenant: Tenant = Depends(verify_api_key)):
 async def import_to_source(
     source_id: int,
     import_data: PropertyImport,
-    tenant: Tenant = Depends(verify_api_key)
+    tenant_id: int = Depends(verify_api_key)
 ):
     """Import JSON data to a source"""
-    sync_service = SyncService(tenant.id)
+    sync_service = SyncService(tenant_id)
     result = sync_service.import_json_to_source(source_id, import_data.data)
     return result
 
@@ -767,10 +767,10 @@ async def import_to_source(
 async def sync_properties(
     source_id: int,
     target_id: int,
-    tenant: Tenant = Depends(verify_api_key)
+    tenant_id: int = Depends(verify_api_key)
 ):
     """Sync properties from source to target"""
-    sync_service = SyncService(tenant.id)
+    sync_service = SyncService(tenant_id)
     result = sync_service.sync_source_to_target(source_id, target_id)
     return result
 
@@ -778,13 +778,13 @@ async def sync_properties(
 @app.get("/sources/{source_id}/properties")
 async def list_source_properties(
     source_id: int,
-    tenant: Tenant = Depends(verify_api_key)
+    tenant_id: int = Depends(verify_api_key)
 ):
     """List properties in a source"""
     with get_db() as db:
         properties = db.query(SourceProperty).join(Source).filter(
             Source.id == source_id,
-            Source.tenant_id == tenant.id
+            Source.tenant_id == tenant_id
         ).all()
         return [{"id": p.id, "external_id": p.external_id, "data": p.data} for p in properties]
 
@@ -792,13 +792,13 @@ async def list_source_properties(
 @app.get("/targets/{target_id}/properties")
 async def list_target_properties(
     target_id: int,
-    tenant: Tenant = Depends(verify_api_key)
+    tenant_id: int = Depends(verify_api_key)
 ):
     """List properties in a target"""
     with get_db() as db:
         properties = db.query(TargetProperty).join(Target).filter(
             Target.id == target_id,
-            Target.tenant_id == tenant.id
+            Target.tenant_id == tenant_id
         ).all()
         return [{
             "id": p.id,
@@ -814,16 +814,16 @@ async def patch_target_property(
     target_id: int,
     property_id: int,
     patch: PropertyPatch,
-    tenant: Tenant = Depends(verify_api_key)
+    tenant_id: int = Depends(verify_api_key)
 ):
     """Patch a target property (marks it as manually changed)"""
-    sync_service = SyncService(tenant.id)
+    sync_service = SyncService(tenant_id)
     
     with get_db() as db:
         prop = db.query(TargetProperty).join(Target).filter(
             TargetProperty.id == property_id,
             TargetProperty.target_id == target_id,
-            Target.tenant_id == tenant.id
+            Target.tenant_id == tenant_id
         ).first()
         
         if not prop:
@@ -836,12 +836,12 @@ async def patch_target_property(
 
 
 @app.delete("/sources/{source_id}")
-async def delete_source(source_id: int, tenant: Tenant = Depends(verify_api_key)):
+async def delete_source(source_id: int, tenant_id: int = Depends(verify_api_key)):
     """Delete a source"""
     with get_db() as db:
         source = db.query(Source).filter(
             Source.id == source_id,
-            Source.tenant_id == tenant.id
+            Source.tenant_id == tenant_id
         ).first()
         
         if not source:
@@ -852,12 +852,12 @@ async def delete_source(source_id: int, tenant: Tenant = Depends(verify_api_key)
 
 
 @app.delete("/targets/{target_id}")
-async def delete_target(target_id: int, tenant: Tenant = Depends(verify_api_key)):
+async def delete_target(target_id: int, tenant_id: int = Depends(verify_api_key)):
     """Delete a target"""
     with get_db() as db:
         target = db.query(Target).filter(
             Target.id == target_id,
-            Target.tenant_id == tenant.id
+            Target.tenant_id == tenant_id
         ).first()
         
         if not target:
@@ -892,11 +892,11 @@ class DeveloperUpdate(BaseModel):
 
 
 @app.post("/developers")
-async def create_developer(developer: DeveloperCreate, tenant: Tenant = Depends(verify_api_key)):
+async def create_developer(developer: DeveloperCreate, tenant_id: int = Depends(verify_api_key)):
     """Create a new developer"""
     with get_db() as db:
         new_developer = Developer(
-            tenant_id=tenant.id,
+            tenant_id=tenant_id,
             name=developer.name,
             description=developer.description,
             website=developer.website,
@@ -912,10 +912,10 @@ async def create_developer(developer: DeveloperCreate, tenant: Tenant = Depends(
 
 
 @app.get("/developers")
-async def list_developers(tenant: Tenant = Depends(verify_api_key)):
+async def list_developers(tenant_id: int = Depends(verify_api_key)):
     """List all developers for tenant"""
     with get_db() as db:
-        developers = db.query(Developer).filter(Developer.tenant_id == tenant.id).all()
+        developers = db.query(Developer).filter(Developer.tenant_id == tenant_id).all()
         return [{
             "id": d.id,
             "name": d.name,
@@ -928,12 +928,12 @@ async def list_developers(tenant: Tenant = Depends(verify_api_key)):
 
 
 @app.get("/developers/{developer_id}")
-async def get_developer(developer_id: int, tenant: Tenant = Depends(verify_api_key)):
+async def get_developer(developer_id: int, tenant_id: int = Depends(verify_api_key)):
     """Get developer details"""
     with get_db() as db:
         developer = db.query(Developer).filter(
             Developer.id == developer_id,
-            Developer.tenant_id == tenant.id
+            Developer.tenant_id == tenant_id
         ).first()
         
         if not developer:
@@ -955,13 +955,13 @@ async def get_developer(developer_id: int, tenant: Tenant = Depends(verify_api_k
 async def update_developer(
     developer_id: int,
     developer_update: DeveloperUpdate,
-    tenant: Tenant = Depends(verify_api_key)
+    tenant_id: int = Depends(verify_api_key)
 ):
     """Update developer"""
     with get_db() as db:
         developer = db.query(Developer).filter(
             Developer.id == developer_id,
-            Developer.tenant_id == tenant.id
+            Developer.tenant_id == tenant_id
         ).first()
         
         if not developer:
@@ -975,12 +975,12 @@ async def update_developer(
 
 
 @app.delete("/developers/{developer_id}")
-async def delete_developer(developer_id: int, tenant: Tenant = Depends(verify_api_key)):
+async def delete_developer(developer_id: int, tenant_id: int = Depends(verify_api_key)):
     """Delete a developer"""
     with get_db() as db:
         developer = db.query(Developer).filter(
             Developer.id == developer_id,
-            Developer.tenant_id == tenant.id
+            Developer.tenant_id == tenant_id
         ).first()
         
         if not developer:
@@ -1027,11 +1027,11 @@ class DevelopmentUpdate(BaseModel):
 
 
 @app.post("/developments")
-async def create_development(development: DevelopmentCreate, tenant: Tenant = Depends(verify_api_key)):
+async def create_development(development: DevelopmentCreate, tenant_id: int = Depends(verify_api_key)):
     """Create a new development"""
     with get_db() as db:
         new_development = Development(
-            tenant_id=tenant.id,
+            tenant_id=tenant_id,
             developer_id=development.developer_id,
             name=development.name,
             description=development.description,
@@ -1055,11 +1055,11 @@ async def create_development(development: DevelopmentCreate, tenant: Tenant = De
 @app.get("/developments")
 async def list_developments(
     developer_id: Optional[int] = None,
-    tenant: Tenant = Depends(verify_api_key)
+    tenant_id: int = Depends(verify_api_key)
 ):
     """List all developments for tenant, optionally filtered by developer"""
     with get_db() as db:
-        query = db.query(Development).filter(Development.tenant_id == tenant.id)
+        query = db.query(Development).filter(Development.tenant_id == tenant_id)
         
         if developer_id:
             query = query.filter(Development.developer_id == developer_id)
@@ -1082,12 +1082,12 @@ async def list_developments(
 
 
 @app.get("/developments/{development_id}")
-async def get_development(development_id: int, tenant: Tenant = Depends(verify_api_key)):
+async def get_development(development_id: int, tenant_id: int = Depends(verify_api_key)):
     """Get development details"""
     with get_db() as db:
         development = db.query(Development).filter(
             Development.id == development_id,
-            Development.tenant_id == tenant.id
+            Development.tenant_id == tenant_id
         ).first()
         
         if not development:
@@ -1115,13 +1115,13 @@ async def get_development(development_id: int, tenant: Tenant = Depends(verify_a
 async def update_development(
     development_id: int,
     development_update: DevelopmentUpdate,
-    tenant: Tenant = Depends(verify_api_key)
+    tenant_id: int = Depends(verify_api_key)
 ):
     """Update development"""
     with get_db() as db:
         development = db.query(Development).filter(
             Development.id == development_id,
-            Development.tenant_id == tenant.id
+            Development.tenant_id == tenant_id
         ).first()
         
         if not development:
@@ -1135,12 +1135,12 @@ async def update_development(
 
 
 @app.delete("/developments/{development_id}")
-async def delete_development(development_id: int, tenant: Tenant = Depends(verify_api_key)):
+async def delete_development(development_id: int, tenant_id: int = Depends(verify_api_key)):
     """Delete a development"""
     with get_db() as db:
         development = db.query(Development).filter(
             Development.id == development_id,
-            Development.tenant_id == tenant.id
+            Development.tenant_id == tenant_id
         ).first()
         
         if not development:
@@ -1166,12 +1166,392 @@ async def cleanup_snapshots(
     sync_service.cleanup_old_snapshots(days)
     return {"status": "cleanup completed"}
 ''',
+    "test_api.py": '''"""
+Test script for Sync Manager API
+Run this script while the API server is running (uvicorn sync_manager.api:app --reload)
+"""
+
+import requests
+import json
+from datetime import datetime
+
+
+BASE_URL = "http://127.0.0.1:8000"
+API_KEY = "test-api-key-12345"
+
+# Track created resources for cleanup
+CREATED_RESOURCES = {
+    "tenant_id": None,
+    "sources": [],
+    "targets": [],
+    "developers": [],
+    "developments": [],
+}
+
+
+def print_section(title):
+    """Print a formatted section header"""
+    print("\n" + "=" * 60)
+    print(f"  {title}")
+    print("=" * 60)
+
+
+def print_response(response, title="Response"):
+    """Print formatted response"""
+    print(f"\n{title}:")
+    print(f"Status: {response.status_code}")
+    try:
+        print(f"Data: {json.dumps(response.json(), indent=2)}")
+    except:
+        print(f"Data: {response.text}")
+
+
+def cleanup_resources():
+    """Delete all created resources"""
+    print_section("CLEANUP - Deleting created resources")
+    headers = {"X-API-Key": API_KEY}
+    
+    # Delete developments first (depends on nothing)
+    for dev_id in CREATED_RESOURCES["developments"]:
+        response = requests.delete(f"{BASE_URL}/developments/{dev_id}", headers=headers)
+        if response.status_code == 200:
+            print(f"✓ Deleted development {dev_id}")
+        else:
+            print(f"✗ Failed to delete development {dev_id}")
+    
+    # Delete developers
+    for dev_id in CREATED_RESOURCES["developers"]:
+        response = requests.delete(f"{BASE_URL}/developers/{dev_id}", headers=headers)
+        if response.status_code == 200:
+            print(f"✓ Deleted developer {dev_id}")
+        else:
+            print(f"✗ Failed to delete developer {dev_id}")
+    
+    # Delete targets
+    for target_id in CREATED_RESOURCES["targets"]:
+        response = requests.delete(f"{BASE_URL}/targets/{target_id}", headers=headers)
+        if response.status_code == 200:
+            print(f"✓ Deleted target {target_id}")
+        else:
+            print(f"✗ Failed to delete target {target_id}")
+    
+    # Delete sources
+    for source_id in CREATED_RESOURCES["sources"]:
+        response = requests.delete(f"{BASE_URL}/sources/{source_id}", headers=headers)
+        if response.status_code == 200:
+            print(f"✓ Deleted source {source_id}")
+        else:
+            print(f"✗ Failed to delete source {source_id}")
+    
+    print("\n✓ Cleanup completed")
+
+
+def test_health():
+    """Test health check endpoint"""
+    print_section("1. Health Check")
+    response = requests.get(f"{BASE_URL}/health")
+    print_response(response)
+    return response.status_code == 200
+
+
+def test_create_tenant():
+    """Test creating a tenant"""
+    print_section("2. Create Tenant")
+    data = {
+        "name": "Test Company",
+        "api_key": API_KEY
+    }
+    response = requests.post(f"{BASE_URL}/tenants", json=data)
+    print_response(response)
+    
+    if response.status_code == 200:
+        CREATED_RESOURCES["tenant_id"] = response.json().get("id")
+    
+    return response.status_code in [200, 400]  # 400 if already exists
+
+
+def test_create_source():
+    """Test creating a source"""
+    print_section("3. Create Source")
+    data = {
+        "name": "MLS Data Feed",
+        "type": "mls",
+        "config": {
+            "feed_url": "https://api.example.com/mls",
+            "refresh_interval": 3600
+        }
+    }
+    headers = {"X-API-Key": API_KEY}
+    response = requests.post(f"{BASE_URL}/sources", json=data, headers=headers)
+    print_response(response)
+    
+    if response.status_code == 200:
+        source_id = response.json().get("id")
+        CREATED_RESOURCES["sources"].append(source_id)
+        return source_id
+    return None
+
+
+def test_create_target():
+    """Test creating a target"""
+    print_section("4. Create Target")
+    data = {
+        "name": "Website Properties",
+        "type": "website",
+        "config": {
+            "api_endpoint": "https://mywebsite.com/api/properties",
+            "auth_token": "token123"
+        }
+    }
+    headers = {"X-API-Key": API_KEY}
+    response = requests.post(f"{BASE_URL}/targets", json=data, headers=headers)
+    print_response(response)
+    
+    if response.status_code == 200:
+        target_id = response.json().get("id")
+        CREATED_RESOURCES["targets"].append(target_id)
+        return target_id
+    return None
+
+
+def test_list_sources():
+    """Test listing sources"""
+    print_section("5. List Sources")
+    headers = {"X-API-Key": API_KEY}
+    response = requests.get(f"{BASE_URL}/sources", headers=headers)
+    print_response(response)
+    return response.status_code == 200
+
+
+def test_list_targets():
+    """Test listing targets"""
+    print_section("6. List Targets")
+    headers = {"X-API-Key": API_KEY}
+    response = requests.get(f"{BASE_URL}/targets", headers=headers)
+    print_response(response)
+    return response.status_code == 200
+
+
+def test_import_properties(source_id):
+    """Test importing properties to a source"""
+    print_section("7. Import Properties to Source")
+    data = {
+        "data": [
+            {
+                "external_id": "PROP-001",
+                "address": "123 Main St",
+                "city": "New York",
+                "state": "NY",
+                "price": 500000,
+                "bedrooms": 3,
+                "bathrooms": 2
+            },
+            {
+                "external_id": "PROP-002",
+                "address": "456 Oak Ave",
+                "city": "Los Angeles",
+                "state": "CA",
+                "price": 750000,
+                "bedrooms": 4,
+                "bathrooms": 3
+            }
+        ]
+    }
+    headers = {"X-API-Key": API_KEY}
+    response = requests.post(f"{BASE_URL}/sources/{source_id}/import", json=data, headers=headers)
+    print_response(response)
+    return response.status_code == 200
+
+
+def test_sync_properties(source_id, target_id):
+    """Test syncing properties from source to target"""
+    print_section("8. Sync Properties")
+    headers = {"X-API-Key": API_KEY}
+    response = requests.post(f"{BASE_URL}/sync/{source_id}/{target_id}", headers=headers)
+    print_response(response)
+    return response.status_code == 200
+
+
+def test_get_source_properties(source_id):
+    """Test getting source properties"""
+    print_section("9. Get Source Properties")
+    headers = {"X-API-Key": API_KEY}
+    response = requests.get(f"{BASE_URL}/sources/{source_id}/properties", headers=headers)
+    print_response(response)
+    return response.status_code == 200
+
+
+def test_get_target_properties(target_id):
+    """Test getting target properties"""
+    print_section("10. Get Target Properties")
+    headers = {"X-API-Key": API_KEY}
+    response = requests.get(f"{BASE_URL}/targets/{target_id}/properties", headers=headers)
+    print_response(response)
+    
+    if response.status_code == 200:
+        properties = response.json()
+        if properties and isinstance(properties, list):
+            return properties[0].get("id")
+    return None
+
+
+def test_create_developer():
+    """Test creating a developer"""
+    print_section("11. Create Developer")
+    data = {
+        "name": "Premium Developers Inc",
+        "description": "Leading real estate developer",
+        "website": "https://premiumdev.com",
+        "contact_email": "info@premiumdev.com",
+        "contact_phone": "+1-555-0123"
+    }
+    headers = {"X-API-Key": API_KEY}
+    response = requests.post(f"{BASE_URL}/developers", json=data, headers=headers)
+    print_response(response)
+    
+    if response.status_code == 200:
+        developer_id = response.json().get("id")
+        CREATED_RESOURCES["developers"].append(developer_id)
+        return developer_id
+    return None
+
+
+def test_list_developers():
+    """Test listing developers"""
+    print_section("12. List Developers")
+    headers = {"X-API-Key": API_KEY}
+    response = requests.get(f"{BASE_URL}/developers", headers=headers)
+    print_response(response)
+    return response.status_code == 200
+
+
+def test_create_development(developer_id):
+    """Test creating a development"""
+    print_section("13. Create Development")
+    data = {
+        "developer_id": developer_id,
+        "name": "Sunset Towers",
+        "description": "Luxury high-rise apartments",
+        "location": "Downtown",
+        "city": "Miami",
+        "state": "FL",
+        "country": "USA",
+        "total_units": 150,
+        "available_units": 45,
+        "website": "https://sunsettowers.com"
+    }
+    headers = {"X-API-Key": API_KEY}
+    response = requests.post(f"{BASE_URL}/developments", json=data, headers=headers)
+    print_response(response)
+    
+    if response.status_code == 200:
+        development_id = response.json().get("id")
+        CREATED_RESOURCES["developments"].append(development_id)
+        return development_id
+    return None
+
+
+def test_list_developments():
+    """Test listing developments"""
+    print_section("14. List Developments")
+    headers = {"X-API-Key": API_KEY}
+    response = requests.get(f"{BASE_URL}/developments", headers=headers)
+    print_response(response)
+    return response.status_code == 200
+
+
+def main():
+    """Run all tests"""
+    print("\n" + "█" * 60)
+    print("  SYNC MANAGER API TEST SUITE")
+    print("█" * 60)
+    print(f"\nTesting API at: {BASE_URL}")
+    print(f"Using API Key: {API_KEY}")
+    
+    results = []
+    
+    try:
+        # Run tests
+        results.append(("Health Check", test_health()))
+        results.append(("Create Tenant", test_create_tenant()))
+        
+        source_id = test_create_source()
+        results.append(("Create Source", source_id is not None))
+        
+        target_id = test_create_target()
+        results.append(("Create Target", target_id is not None))
+        
+        results.append(("List Sources", test_list_sources()))
+        results.append(("List Targets", test_list_targets()))
+        
+        if source_id:
+            results.append(("Import Properties", test_import_properties(source_id)))
+            
+            if target_id:
+                results.append(("Sync Properties", test_sync_properties(source_id, target_id)))
+            
+            results.append(("Get Source Properties", test_get_source_properties(source_id)))
+        
+        target_property_id = None
+        if target_id:
+            target_property_id = test_get_target_properties(target_id)
+            results.append(("Get Target Properties", target_property_id is not None))
+        
+        developer_id = test_create_developer()
+        results.append(("Create Developer", developer_id is not None))
+        
+        results.append(("List Developers", test_list_developers()))
+        
+        if developer_id:
+            development_id = test_create_development(developer_id)
+            results.append(("Create Development", development_id is not None))
+        
+        results.append(("List Developments", test_list_developments()))
+        
+        # Print summary
+        print_section("TEST SUMMARY")
+        passed = sum(1 for _, result in results if result)
+        total = len(results)
+        
+        for test_name, result in results:
+            status = "✓ PASSED" if result else "✗ FAILED"
+            print(f"{status:12} - {test_name}")
+        
+        print(f"\n{'='*60}")
+        print(f"  Results: {passed}/{total} tests passed")
+        print(f"{'='*60}\n")
+        
+        return passed == total
+        
+    finally:
+        # Always run cleanup, even if tests fail
+        cleanup_resources()
+
+
+if __name__ == "__main__":
+    try:
+        success = main()
+        exit(0 if success else 1)
+    except requests.exceptions.ConnectionError:
+        print("\n❌ ERROR: Cannot connect to API server")
+        print("   Make sure the server is running:")
+        print("   uvicorn sync_manager.api:app --reload")
+        exit(1)
+    except Exception as e:
+        print(f"\n❌ ERROR: {e}")
+        exit(1)
+''',
 }
 
 # Write each module
 for filename, content in modules.items():
-    (project_root / "sync_manager" / filename).write_text(content, encoding='utf-8')
-    print(f"[OK] Created: sync_manager/{filename}")
+    # test_api.py goes to project root, other modules go to sync_manager/
+    if filename == "test_api.py":
+        (project_root / filename).write_text(content, encoding='utf-8')
+        print(f"[OK] Created: {filename}")
+    else:
+        (project_root / "sync_manager" / filename).write_text(content, encoding='utf-8')
+        print(f"[OK] Created: sync_manager/{filename}")
 
 # Continue with CLI and other files...
 cli_content = '''import argparse

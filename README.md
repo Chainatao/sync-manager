@@ -288,10 +288,29 @@ See [IMPLEMENTATION.md](guides/reference/IMPLEMENTATION.md) for detailed guide.
 
 ## 📋 Recent Updates
 
-- **v1.0.1** (January 2026)
-  - Fixed SQLAlchemy reserved attribute conflict: renamed `metadata` columns to `meta_data`
-  - Added missing `datetime` import in API module
-  - Updated templates and generators with bug fixes
+### v1.0.2 (January 2026)
+**API Session Fixes & Testing Improvements:**
+- 🔧 Fixed SQLAlchemy session scope issues in `verify_api_key` dependency
+  - Changed to return tenant ID instead of Tenant object
+  - Updated all 21 endpoints to use `tenant_id` parameter directly
+  - Eliminates cross-session object reference errors (500 errors)
+- ✅ Added comprehensive test_api.py with automatic cleanup
+  - Tests all major endpoints (health, tenants, sources, targets, developers, developments)
+  - Automatically deletes all created test data after execution
+  - Uses try/finally to ensure cleanup runs even if tests fail
+  - Supports running tests multiple times without database pollution
+
+### v1.0.1 (January 2026)
+**Bug Fixes:**
+- 🔧 Fixed SQLAlchemy reserved attribute conflict in Developer and Development models
+  - Renamed database column from `metadata` to `meta_data` 
+  - Updated all API mappings to maintain backward compatibility (API still uses `"metadata"` in JSON)
+- 🔧 Added missing `datetime` import in API module to fix `NameError` 
+- 🔧 Updated project generator templates with all bug fixes
+
+**Note:** If you have an existing project generated before this update, you'll need to either:
+1. Regenerate the project using `python create_independent_project.py`, or
+2. Manually apply the fixes to your `sync_manager/models.py` and `sync_manager/api.py` files
 
 ---
 
