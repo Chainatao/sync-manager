@@ -122,7 +122,7 @@ pip install -r requirements.txt
 
 ```bash
 # Start the API server
-python -m sync_manager.cli run
+uvicorn sync_manager.api:app --reload
 
 # API will be available at http://localhost:8000
 # Interactive API docs at http://localhost:8000/docs
@@ -315,10 +315,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-**Project Maintainer**: Your Name
+**Project Maintainer**: Chainatao
 
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
+- GitHub: [@Chainatao](https://github.com/Chainatao)
+- Email: inform@acion.es
 
 ---
 
