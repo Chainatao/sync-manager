@@ -232,6 +232,8 @@ class SourceProperty(Base):
     
     id = Column(Integer, primary_key=True)
     source_id = Column(Integer, ForeignKey("sources.id", ondelete="CASCADE"), nullable=False)
+    developer_id = Column(Integer, ForeignKey("developers.id", ondelete="SET NULL"), nullable=True)
+    development_id = Column(Integer, ForeignKey("developments.id", ondelete="SET NULL"), nullable=True)
     external_id = Column(String(255), nullable=False)
     data = Column(JSON, nullable=False)
     hash = Column(String(64), nullable=False)
@@ -239,6 +241,8 @@ class SourceProperty(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
     source = relationship("Source", back_populates="properties")
+    developer = relationship("Developer", foreign_keys=[developer_id])
+    development = relationship("Development", foreign_keys=[development_id])
     snapshots = relationship("SourceSnapshot", back_populates="property", cascade="all, delete-orphan")
     
     __table_args__ = (
@@ -254,6 +258,8 @@ class TargetProperty(Base):
     id = Column(Integer, primary_key=True)
     target_id = Column(Integer, ForeignKey("targets.id", ondelete="CASCADE"), nullable=False)
     source_property_id = Column(Integer, ForeignKey("source_properties.id", ondelete="SET NULL"), nullable=True)
+    developer_id = Column(Integer, ForeignKey("developers.id", ondelete="SET NULL"), nullable=True)
+    development_id = Column(Integer, ForeignKey("developments.id", ondelete="SET NULL"), nullable=True)
     external_id = Column(String(255), nullable=False)
     data = Column(JSON, nullable=False)
     hash = Column(String(64), nullable=False)
@@ -263,6 +269,8 @@ class TargetProperty(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
     target = relationship("Target", back_populates="properties")
+    developer = relationship("Developer", foreign_keys=[developer_id])
+    development = relationship("Development", foreign_keys=[development_id])
     snapshots = relationship("TargetSnapshot", back_populates="property", cascade="all, delete-orphan")
     
     __table_args__ = (
