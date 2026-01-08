@@ -122,7 +122,7 @@ pip install -r requirements.txt
 
 ```bash
 # Start the API server
-python -m sync_manager.cli run
+uvicorn sync_manager.api:app --reload
 
 # API will be available at http://localhost:8000
 # Interactive API docs at http://localhost:8000/docs
